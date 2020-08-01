@@ -1,0 +1,33 @@
+// stylelint-disable declaration-no-important
+// Visibility
+$breakpoints-bootstrap: false;
+
+@if $breakpoints-bootstrap==true {
+    @each $breakpoint in map-keys($grid-breakpoints) {
+        @include media-breakpoint-only($breakpoint) {
+            $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+            .hidden#{$infix}-only {
+                display: none !important;
+            }
+        }
+    }
+}
+
+@else {
+    // combine bs4 brekpoints phone: [xs, sm], tablet: [md, lg], desktop: [xl, xxl]
+    @include media-breakpoint-between(0, sm) {
+        .hidden-phone-only {
+            display: none !important;
+        }
+    }
+    @include media-breakpoint-between(md, lg) {
+        .hidden-tablet-only {
+            display: none !important;
+        }
+    }
+    @include media-breakpoint-between(xl, xxl) {
+        .hidden-desktop-only {
+            display: none !important;
+        }
+    }
+}

@@ -1,0 +1,8 @@
+// stylelint-disable declaration-no-important
+
+$blend-mode: normal, multiply, screen, overlay, darken, lighten, color-dodge, color-burn, hard-light, soft-light, difference, exclusion, hue, saturation, color, luminosity;
+@each $mode in $blend-mode {
+    .blend-mode-#{$mode}{
+        mix-blend-mode: #{$mode}
+    }
+}

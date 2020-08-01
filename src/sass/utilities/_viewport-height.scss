@@ -1,0 +1,38 @@
+// stylelint-disable declaration-no-important
+// Viewport height
+$vh: () !default;
+$vh: map-merge(
+  (
+    "10": 10vh,
+    "20": 20vh,
+    "30": 30vh,
+    "40": 40vh,
+    "50": 50vh,
+    "60": 60vh,
+    "70": 70vh,
+    "80": 80vh,
+    "90": 90vh,
+    "100": 100vh
+  ),
+  $vh
+);
+
+@each $breakpoint in map-keys($grid-breakpoints) {
+    @include media-breakpoint-up($breakpoint) {
+        $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+        @each $size, $length in $vh {
+            .vh#{$infix}-#{$size}{
+               height: $length !important;
+            }
+            .vh-min#{$infix}-#{$size}{
+                min-height: $length !important;
+            }
+            .vh#{$infix}-auto {
+                height: auto !important;
+            }
+            .vh-min#{$infix}-auto {
+                height: auto !important;
+            }
+        }
+    }
+}

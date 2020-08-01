@@ -1,0 +1,63 @@
+// background position
+$bg-position: () !default;
+$bg-position: map-merge(
+  (
+    "top":     top,
+    "left":    left,
+    "right":   right,
+    "bottom":  bottom,
+    "center":  center,
+    "left-top":  left top,
+    "center-top":  center top,
+    "right-top":  right top,
+    "left-center":  left center,
+    "right-center":  right center,
+    "left-bottom":  left bottom,
+    "center-bottom":  center bottom,
+    "right-bottom":  right bottom,
+  ), $bg-position
+);
+
+@each $pos, $value in $bg-position {
+    .background-position-#{$pos} {
+        background-position: #{$value} !important;
+    }
+}
+
+// backgroun size
+.background-size-cover{
+    background-size: cover!important;
+}
+.background-size-contain{
+    background-size: contain!important;
+}
+.background-size-auto{
+    background-size: auto!important;
+}
+
+//backrund attachment
+.background-attachment-fixed{
+    background-attachment: fixed!important;
+}
+.background-attachment-scroll{
+    background-attachment: scroll!important;
+}
+.background-attachment-auto{
+    background-attachment: auto!important;
+}
+
+//backrund repat
+.background-repeat{
+    background-repeat: repeat!important;
+}
+.background-no-repeat{
+    background-repeat: no-repeat!important;
+}
+.background-repeat-x{
+    background-repeat: repeat-x!important;
+}
+.background-repeat-y{
+    background-repeat: repeat-y!important;
+}
+
+

@@ -1,0 +1,44 @@
+// stylelint-disable declaration-no-important
+// Font size
+$breakpoints-bootstrap: false;
+$fs-size: 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 
+            52, 54, 56, 58, 60, 64, 68, 72, 76, 80;
+
+
+@if $breakpoints-bootstrap==true {
+    @each $breakpoint in map-keys($grid-breakpoints) {
+        @include media-breakpoint-up($breakpoint) {
+            $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+            @each $size in $fs-size {
+                .fs#{$infix}-#{$size} {
+                    font-size: #{$size}px !important;
+                }
+            }
+        }
+    }
+}
+
+@else {
+    // combine bs4 brekpoints phone: [xs, sm], tablet: [md, lg], desktop: [xl, xxl]
+    @include media-breakpoint-between(0, sm) {
+        @each $size in $fs-size {
+            .fs-phone-#{$size} {
+                font-size: #{$size}px !important;
+            }
+        }
+    }
+    @include media-breakpoint-between(md, lg) {
+        @each $size in $fs-size {
+            .fs-tablet-#{$size} {
+                font-size: #{$size}px !important;
+            }
+        }
+    }
+    @include media-breakpoint-between(xl, xxl) {
+        @each $size in $fs-size {
+            .fs-desktop-#{$size} {
+                font-size: #{$size}px !important;
+            }
+        }
+    }
+}

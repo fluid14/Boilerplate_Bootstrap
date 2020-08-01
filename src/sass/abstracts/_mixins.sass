@@ -1,0 +1,6 @@
+@mixin cutText($lineNumber)
+  overflow: hidden
+  text-overflow: ellipsis
+  display: -webkit-box
+  -webkit-line-clamp: $lineNumber
+  -webkit-box-orient: vertical
