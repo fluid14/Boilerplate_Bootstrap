@@ -1,194 +1,104 @@
-var gulp = require('gulp');
-var browserSync = require('browser-sync');
-var sass = require('gulp-sass');
-var sourcemaps = require('gulp-sourcemaps');
-var autoprefixer = require('gulp-autoprefixer');
-var cleanCSS = require('gulp-clean-css');
-var babel = require('gulp-babel');
-var uglify = require('gulp-terser');
-var concat = require('gulp-concat');
-var imagemin = require('gulp-imagemin');
-var changed = require('gulp-changed');
+'use strict'
+
+var {src, dest, watch, series, parallel} = require('gulp')
+var gulpif = require('gulp-if');
+
+var browserSync = require('browser-sync').create();
 var htmlReplace = require('gulp-html-replace');
-var htmlMin = require('gulp-htmlmin');
-var del = require('del');
-var sequence = require('run-sequence');
-var purgecss = require('gulp-purgecss');
-var gutil = require('gulp-util');
-var path = require('path');
 var htmlPartial = require('gulp-html-partial');
+var htmlMin = require('gulp-htmlmin');
+var sass = require('gulp-sass');
+sass.compiler = require('node-sass');
+
 
 var config = {
-  dist: './dist/',
-  src: './src/',
-  cssin: './src/css/**/*.css',
-  jsin: './src/js/**/*.js',
-  partials: './src/partials/**/*.html',
-  imgin: './src/assets/**/*.{jpg,jpeg,png,gif}',
-  htmlin: './src/*.html',
-  sassin: './src/sass/**/*.sass',
-  cssout: './dist/css/',
-  jsout: './dist/js/',
-  imgout: './dist/assets/',
-  htmlout: './dist/',
-  sassout: './src/css/',
-  cssoutname: './style.css',
-  jsoutname: './script.js',
-  cssreplaceout: './css/style.css',
-  jsreplaceout: './js/script.js'
+    htmlMin: true,
+    path: {
+        dist: './dist/',
+        src: './src/',
+        html: {
+            in: './src/*.html',
+            out: './dist/',
+        },
+        sass: {
+            in: './src/sass/**/*.sass',
+            out: './src/css/',
+        },
+        css: {
+            in: './src/css/**/*.css',
+            out: './dist/css/',
+            outname: './style.css',
+            replaceout: './css/style.css',
+        },
+        js: {
+            in: './src/js/**/*.js',
+            out: './dist/js/',
+            outname: './script.js',
+            replaceout: './js/script.js',
+        },
+        partials: {
+            src: './src/partials/',
+        },
+        image: {
+            in: './src/assets/**/*.{jpg,jpeg,png,gif}',
+            out: './dist/assets/',
+        }
+    }
 };
 
-gulp.task('reload', function() {
-  browserSync.reload();
-});
-
-gulp.task('serve', ['sass', 'html'], function() {
-  browserSync({
-    server: config.dist
-  });
-
-  gulp.watch([config.htmlin], ['html', 'reload']);
-  gulp.watch([config.partials], ['html', 'reload']);
-  gulp.watch([config.cssin], ['css', 'reload']);
-  gulp.watch([config.jsin], ['js', 'reload']);
-  gulp.watch(config.sassin, ['sass', 'reload']);
-  gulp.watch(config.imgin, ['img', 'reload']);
-});
-
-gulp.task('sass', function() {
-  return gulp
-    .src(config.sassin)
-    .pipe(sourcemaps.init())
-    .pipe(sass().on('error', sass.logError))
-    .pipe(
-      autoprefixer({
-        browsers: ['last 3 versions']
-      })
-    )
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(config.sassout))
-    .pipe(browserSync.stream());
-});
-
-gulp.task('css', function() {
-  return gulp
-    .src(config.cssin)
-    .pipe(concat(config.cssoutname))
-    .pipe(
-      cleanCSS({
-        level: {
-          1: {
-            specialComments: 0
-          }
+// BrowserSync
+function serve(done) {
+    browserSync.init({
+        server: {
+            baseDir: config.path.dist
         }
-      })
-    )
-    .pipe(gulp.dest(config.cssout));
-});
+    });
+    done();
+}
 
-gulp.task('purgecss', () => {
-  return gulp
-    .src('dist/**/*.css')
-    .pipe(
-      purgecss({
-        content: ['dist/**/*.html', 'dist/**/*.js']
-      })
-    )
-    .pipe(gulp.dest('dist/'));
-});
+function reload(done) {
+    browserSync.reload();
+    done();
+}
 
-gulp.task('babel', () =>
-  gulp
-    .src('src/js/script.js')
-    .pipe(
-      babel({
-        presets: ['@babel/env']
-      })
-    )
-    .pipe(gulp.dest('src/js/'))
-);
+function watchFiles() {
+    watch(config.path.html.in, reload)
+}
 
-gulp.task('js', function() {
-  return (
-    gulp
-      .src(config.jsin)
-      // .pipe(concat(config.jsoutname))
-      .pipe(uglify())
-      .pipe(gulp.dest(config.jsout))
-  );
-});
+// HTML
+function html(done, minification = config.htmlMin){
+    src(config.path.html.in)
+        .pipe(
+            htmlPartial({
+                basePath: config.path.partials.src,
+                tagName: 'part',
+                variablePrefix: '@@'
+            })
+        )
+        .pipe(
+            htmlReplace({
+                css: config.path.css.replaceout,
+                js: config.path.js.replaceout
+            })
+        )
+        .pipe(gulpif(
+            minification,
+            htmlMin({
+            sortAttributes: true,
+            sortClassName: true,
+            collapseWhitespace: true,
+            removeComments: true
+        })))
+        .pipe(dest(config.path.html.out))
+    done();
+}
 
-gulp.task('img', function() {
-  return (
-    gulp
-      .src(config.imgin)
-      .pipe(changed(config.imgout))
-      // .pipe(imagemin())
-      .pipe(gulp.dest(config.imgout))
-  );
-});
+// Sass
+function sassCompile(done){
+    src(config.path.sass.in)
+        .pipe(sass().on('error', sass.logError))
+        .pipe(dest(config.path.sass.out));
+    done();
+}
 
-gulp.task('html', function() {
-  return gulp
-    .src(config.htmlin)
-    .pipe(
-      htmlPartial({
-        basePath: 'src/partials/',
-        tagName: 'part'
-      })
-    )
-    .pipe(
-      htmlReplace({
-        css: config.cssreplaceout,
-        js: config.jsreplaceout
-      })
-    )
-      // Tego nie używaj, bo mi się jebie potem wszystko :P
-    /*.pipe(
-      htmlMin({
-        sortAttributes: true,
-        sortClassName: true,
-        collapseWhitespace: true,
-        removeComments: true
-      })
-    )*/
-    .pipe(gulp.dest(config.dist));
-});
-
-gulp.task('copyTtf', function() {
-  gulp.src('./src/**/**.{ttf,otf}').pipe(gulp.dest('./dist/'));
-});
-
-gulp.task('copySvg', function() {
-  gulp.src('./src/assets/img/**/*.svg').pipe(gulp.dest('./dist/assets/img/'));
-});
-
-gulp.task('copyVideo', function() {
-  gulp
-    .src('./src/assets/video/**/*.{m4v,mov,MOV,mp4}')
-    .pipe(gulp.dest('./dist/assets/video/'));
-});
-
-gulp.task('clean', function() {
-  return del([config.dist]);
-});
-
-gulp.task('build', function() {
-  sequence('clean', [
-    'html',
-    'js',
-    'css',
-    'img',
-    'copySvg',
-    'copyVideo',
-    'copyTtf'
-  ], purgecss);
-});
-
-gulp.task('default', function() {
-  sequence(
-    'clean',
-    ['html', 'js', 'css', 'img', 'copySvg', 'copyVideo', 'copyTtf'],
-    ['serve']
-  );
-});
+exports.dev = series(sassCompile, html, parallel(watchFiles, serve))
