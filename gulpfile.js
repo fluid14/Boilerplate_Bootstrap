@@ -4,11 +4,17 @@ var {src, dest, watch, series, parallel} = require('gulp')
 var gulpif = require('gulp-if');
 
 var browserSync = require('browser-sync').create();
+
 var htmlReplace = require('gulp-html-replace');
 var htmlPartial = require('gulp-html-partial');
 var htmlMin = require('gulp-htmlmin');
+
 var sass = require('gulp-sass');
 sass.compiler = require('node-sass');
+var sourcemaps = require('gulp-sourcemaps');
+const autoprefixer = require('gulp-autoprefixer');
+
+
 
 
 var config = {
@@ -96,9 +102,19 @@ function html(done, minification = config.htmlMin){
 // Sass
 function sassCompile(done){
     src(config.path.sass.in)
+        .pipe(sourcemaps.init())
         .pipe(sass().on('error', sass.logError))
-        .pipe(dest(config.path.sass.out));
+        .pipe(
+            autoprefixer({
+                browsers: ['since 2015, not dead']
+            })
+        )
+        .pipe(sourcemaps.write())
+        .pipe(dest(config.path.sass.out))
+        .pipe(browserSync.stream());
     done();
 }
+
+config.htmlMin = true;
 
 exports.dev = series(sassCompile, html, parallel(watchFiles, serve))

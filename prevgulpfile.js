@@ -1,7 +1,3 @@
-var gulp = require('gulp');
-var browserSync = require('browser-sync');
-var sass = require('gulp-sass');
-var sourcemaps = require('gulp-sourcemaps');
 var autoprefixer = require('gulp-autoprefixer');
 var cleanCSS = require('gulp-clean-css');
 var babel = require('gulp-babel');
@@ -9,14 +5,11 @@ var uglify = require('gulp-terser');
 var concat = require('gulp-concat');
 var imagemin = require('gulp-imagemin');
 var changed = require('gulp-changed');
-var htmlReplace = require('gulp-html-replace');
-var htmlMin = require('gulp-htmlmin');
 var del = require('del');
 var sequence = require('run-sequence');
 var purgecss = require('gulp-purgecss');
 var gutil = require('gulp-util');
 var path = require('path');
-var htmlPartial = require('gulp-html-partial');
 
 var config = {
   dist: './dist/',
