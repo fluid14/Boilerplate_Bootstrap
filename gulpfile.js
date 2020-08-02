@@ -1,9 +1,13 @@
 'use strict'
 
-var {src, dest, watch, series, parallel} = require('gulp')
+var {src, dest, watch, series, parallel, task} = require('gulp')
 var gulpif = require('gulp-if');
+var del = require('del');
+var runSequence = require('gulp4-run-sequence');
 
 var browserSync = require('browser-sync').create();
+var concat = require('gulp-concat');
+var order = require("gulp-order");
 
 var htmlReplace = require('gulp-html-replace');
 var htmlPartial = require('gulp-html-partial');
@@ -14,11 +18,15 @@ sass.compiler = require('node-sass');
 var sourcemaps = require('gulp-sourcemaps');
 const autoprefixer = require('gulp-autoprefixer');
 
+var cleanCSS = require('gulp-clean-css');
 
+var terser = require('gulp-terser');
+var babel = require('gulp-babel');
 
 
 var config = {
     htmlMin: true,
+    cssMin: true,
     path: {
         dist: './dist/',
         src: './src/',
@@ -33,6 +41,7 @@ var config = {
         css: {
             in: './src/css/**/*.css',
             out: './dist/css/',
+            orderin: 'src/css/**/*.css',
             outname: './style.css',
             replaceout: './css/style.css',
         },
@@ -52,6 +61,11 @@ var config = {
     }
 };
 
+// Clean
+function clean(done) {
+    return del([config.path.dist]);
+}
+
 // BrowserSync
 function serve(done) {
     browserSync.init({
@@ -68,11 +82,14 @@ function reload(done) {
 }
 
 function watchFiles() {
-    watch(config.path.html.in, reload)
+    watch([config.path.html.in], series(html, reload));
+    watch([config.path.sass.in], series(sassCompile));
+    watch([config.path.css.in], series(css, reload));
+    watch([config.path.js.in], series(js, reload));
 }
 
 // HTML
-function html(done, minification = config.htmlMin){
+function html(done, minification = config.htmlMin) {
     src(config.path.html.in)
         .pipe(
             htmlPartial({
@@ -90,17 +107,17 @@ function html(done, minification = config.htmlMin){
         .pipe(gulpif(
             minification,
             htmlMin({
-            sortAttributes: true,
-            sortClassName: true,
-            collapseWhitespace: true,
-            removeComments: true
-        })))
+                sortAttributes: true,
+                sortClassName: true,
+                collapseWhitespace: true,
+                removeComments: true
+            })))
         .pipe(dest(config.path.html.out))
     done();
 }
 
 // Sass
-function sassCompile(done){
+function sassCompile(done) {
     src(config.path.sass.in)
         .pipe(sourcemaps.init())
         .pipe(sass().on('error', sass.logError))
@@ -115,6 +132,49 @@ function sassCompile(done){
     done();
 }
 
-config.htmlMin = true;
+// CSS
+function css(done, minification = config.cssMin) {
+    src(config.path.css.in)
+        .pipe(order([
+            "vendor/**/*.css",
+            config.path.css.orderin,
+        ]))
+        .pipe(concat(config.path.css.outname))
+        .pipe(
+            gulpif(minification,
+                cleanCSS({
+                    level: {
+                        1: {
+                            specialComments: 0
+                        }
+                    }
+                })
+            )
+        )
+        .pipe(dest(config.path.css.out));
+    done();
+}
 
-exports.dev = series(sassCompile, html, parallel(watchFiles, serve))
+// JavaScript
+function js(done) {
+    src(config.path.js.in)
+        .pipe(sourcemaps.init())
+        .pipe(
+            babel({
+            presets: ['@babel/env']
+        })
+        )
+        .pipe(terser())
+        .pipe(sourcemaps.write())
+        .pipe(dest(config.path.js.out))
+    done();
+}
+
+// Image compress
+
+
+config.htmlMin = true;
+config.cssMin = false;
+
+
+exports.dev = series(clean, js, sassCompile, css, html, serve, watchFiles);

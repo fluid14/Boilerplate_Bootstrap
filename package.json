@@ -23,17 +23,27 @@
   },
   "homepage": "https://github.com/fluid14/Boilerplate_Bootstrap#readme",
   "devDependencies": {
+    "@babel/core": "^7.11.0",
+    "@babel/preset-env": "^7.11.0",
     "browser-sync": "^2.26.12",
+    "del": "^5.1.0",
     "gulp": "^4.0.2",
     "gulp-autoprefixer": "^7.0.1",
+    "gulp-babel": "^8.0.0",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
     "gulp-html-partial": "^1.0.1",
     "gulp-html-replace": "^1.6.2",
+    "gulp-order": "^1.2.0",
     "gulp-sass": "^4.1.0",
+    "gulp-terser": "^1.3.0",
+    "gulp4-run-sequence": "^1.0.1",
     "node-sass": "^4.14.1"
   },
   "dependencies": {
     "gulp-htmlmin": "^5.0.1",
     "gulp-if": "^3.0.0",
-    "gulp-sourcemaps": "^2.6.5"
+    "gulp-sourcemaps": "^2.6.5",
+    "readable-stream": "^3.6.0"
   }
 }

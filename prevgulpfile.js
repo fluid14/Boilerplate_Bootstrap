@@ -1,13 +1,11 @@
-var autoprefixer = require('gulp-autoprefixer');
-var cleanCSS = require('gulp-clean-css');
 var babel = require('gulp-babel');
 var uglify = require('gulp-terser');
-var concat = require('gulp-concat');
+
 var imagemin = require('gulp-imagemin');
 var changed = require('gulp-changed');
-var del = require('del');
-var sequence = require('run-sequence');
+
 var purgecss = require('gulp-purgecss');
+
 var gutil = require('gulp-util');
 var path = require('path');
 
@@ -31,14 +29,7 @@ var config = {
   jsreplaceout: './js/script.js'
 };
 
-gulp.task('reload', function() {
-  browserSync.reload();
-});
 
-gulp.task('serve', ['sass', 'html'], function() {
-  browserSync({
-    server: config.dist
-  });
 
   gulp.watch([config.htmlin], ['html', 'reload']);
   gulp.watch([config.partials], ['html', 'reload']);
@@ -48,36 +39,6 @@ gulp.task('serve', ['sass', 'html'], function() {
   gulp.watch(config.imgin, ['img', 'reload']);
 });
 
-gulp.task('sass', function() {
-  return gulp
-    .src(config.sassin)
-    .pipe(sourcemaps.init())
-    .pipe(sass().on('error', sass.logError))
-    .pipe(
-      autoprefixer({
-        browsers: ['last 3 versions']
-      })
-    )
-    .pipe(sourcemaps.write('.'))
-    .pipe(gulp.dest(config.sassout))
-    .pipe(browserSync.stream());
-});
-
-gulp.task('css', function() {
-  return gulp
-    .src(config.cssin)
-    .pipe(concat(config.cssoutname))
-    .pipe(
-      cleanCSS({
-        level: {
-          1: {
-            specialComments: 0
-          }
-        }
-      })
-    )
-    .pipe(gulp.dest(config.cssout));
-});
 
 gulp.task('purgecss', () => {
   return gulp
@@ -121,33 +82,6 @@ gulp.task('img', function() {
   );
 });
 
-gulp.task('html', function() {
-  return gulp
-    .src(config.htmlin)
-    .pipe(
-      htmlPartial({
-        basePath: 'src/partials/',
-        tagName: 'part'
-      })
-    )
-    .pipe(
-      htmlReplace({
-        css: config.cssreplaceout,
-        js: config.jsreplaceout
-      })
-    )
-      // Tego nie używaj, bo mi się jebie potem wszystko :P
-    /*.pipe(
-      htmlMin({
-        sortAttributes: true,
-        sortClassName: true,
-        collapseWhitespace: true,
-        removeComments: true
-      })
-    )*/
-    .pipe(gulp.dest(config.dist));
-});
-
 gulp.task('copyTtf', function() {
   gulp.src('./src/**/**.{ttf,otf}').pipe(gulp.dest('./dist/'));
 });
@@ -160,10 +94,6 @@ gulp.task('copyVideo', function() {
   gulp
     .src('./src/assets/video/**/*.{m4v,mov,MOV,mp4}')
     .pipe(gulp.dest('./dist/assets/video/'));
-});
-
-gulp.task('clean', function() {
-  return del([config.dist]);
 });
 
 gulp.task('build', function() {
