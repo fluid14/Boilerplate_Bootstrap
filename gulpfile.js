@@ -16,9 +16,10 @@ var htmlMin = require('gulp-htmlmin');
 var sass = require('gulp-sass');
 sass.compiler = require('node-sass');
 var sourcemaps = require('gulp-sourcemaps');
-const autoprefixer = require('gulp-autoprefixer');
+var autoprefixer = require('gulp-autoprefixer');
 
 var cleanCSS = require('gulp-clean-css');
+var purgeCss = require('gulp-purgecss');
 
 var terser = require('gulp-terser');
 var babel = require('gulp-babel');
@@ -58,7 +59,7 @@ var config = {
             src: './src/partials/',
         },
         image: {
-            in: './src/assets/**/*.{jpg,jpeg,png,gif}',
+            in: './src/assets/**/*.{jpg,jpeg,png,gif,svg}',
             out: './dist/assets/',
         }
     }
@@ -137,7 +138,7 @@ function sassCompile(done) {
 }
 
 // CSS
-function css(done, minification = config.cssMin) {
+function css(done, minification = config.cssMin, cleanUnusedCss = config.cleanUnusedCss) {
     src(config.path.css.in)
         .pipe(order([
             "vendor/**/*.css",
@@ -155,6 +156,12 @@ function css(done, minification = config.cssMin) {
                 })
             )
         )
+        .pipe(gulpif(
+            cleanUnusedCss,
+            purgeCss({
+                content: ['dist/**/*.html', 'dist/**/*.js']
+            })
+        ))
         .pipe(dest(config.path.css.out));
     done();
 }
@@ -165,8 +172,8 @@ function js(done) {
         .pipe(sourcemaps.init())
         .pipe(
             babel({
-            presets: ['@babel/env']
-        })
+                presets: ['@babel/env']
+            })
         )
         .pipe(terser())
         .pipe(sourcemaps.write())
@@ -176,8 +183,8 @@ function js(done) {
 
 // Image compress
 function img(done) {
-    src(config.imgin)
-        .pipe(changed(config.path.image.in))
+    src(config.path.image.in)
+        .pipe(changed(config.path.image.out))
         .pipe(imagemin())
         .pipe(dest(config.path.image.out))
     done();
@@ -186,6 +193,8 @@ function img(done) {
 
 config.htmlMin = true;
 config.cssMin = false;
+config.cleanUnusedCss = false;
 
 
 exports.dev = series(clean, js, sassCompile, css, html, img, serve, watchFiles);
+exports.build = series(clean, js, sassCompile, css, html, img);
