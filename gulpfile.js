@@ -23,6 +23,9 @@ var cleanCSS = require('gulp-clean-css');
 var terser = require('gulp-terser');
 var babel = require('gulp-babel');
 
+var imagemin = require('gulp-imagemin');
+var changed = require('gulp-changed');
+
 
 var config = {
     htmlMin: true,
@@ -86,6 +89,7 @@ function watchFiles() {
     watch([config.path.sass.in], series(sassCompile));
     watch([config.path.css.in], series(css, reload));
     watch([config.path.js.in], series(js, reload));
+    watch([config.path.image.in], series(img, reload));
 }
 
 // HTML
@@ -171,10 +175,17 @@ function js(done) {
 }
 
 // Image compress
+function img(done) {
+    src(config.imgin)
+        .pipe(changed(config.path.image.in))
+        .pipe(imagemin())
+        .pipe(dest(config.path.image.out))
+    done();
+}
 
 
 config.htmlMin = true;
 config.cssMin = false;
 
 
-exports.dev = series(clean, js, sassCompile, css, html, serve, watchFiles);
+exports.dev = series(clean, js, sassCompile, css, html, img, serve, watchFiles);
