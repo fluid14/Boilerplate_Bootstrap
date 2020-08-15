@@ -35,7 +35,7 @@ var config = {
         dist: './dist/',
         src: './src/',
         html: {
-            in: './src/*.html',
+            in: './src/**/*.html',
             out: './dist/',
         },
         sass: {
@@ -61,6 +61,10 @@ var config = {
         image: {
             in: './src/assets/**/*.{jpg,jpeg,png,gif,svg}',
             out: './dist/assets/',
+        },
+        fonts: {
+            in: './src/assets/fonts/**/*.{otf,ttf}',
+            out: './dist/assets/fonts/'
         }
     }
 };
@@ -91,6 +95,7 @@ function watchFiles() {
     watch([config.path.css.in], series(css, reload));
     watch([config.path.js.in], series(js, reload));
     watch([config.path.image.in], series(img, reload));
+    watch([config.path.fonts.in], series(copyFonts, reload));
 }
 
 // HTML
@@ -185,8 +190,15 @@ function js(done) {
 function img(done) {
     src(config.path.image.in)
         .pipe(changed(config.path.image.out))
-        .pipe(imagemin())
+        // .pipe(imagemin())
         .pipe(dest(config.path.image.out))
+    done();
+}
+
+// Copy
+function copyFonts(done){
+    src(config.path.fonts.in)
+        .pipe(dest(config.path.fonts.out));
     done();
 }
 
@@ -196,5 +208,5 @@ config.cssMin = false;
 config.cleanUnusedCss = false;
 
 
-exports.dev = series(clean, js, sassCompile, css, html, img, serve, watchFiles);
-exports.build = series(clean, js, sassCompile, css, html, img);
+exports.dev = series(clean, parallel(img, copyFonts, js, sassCompile), css, html, serve, watchFiles);
+exports.build = series(clean, copyFonts, js, sassCompile, css, html, img);
